@@ -35,7 +35,7 @@ class TextToVideo:
             else:
                 # TODO: Fix the frame and carry size
                 frame = carry + binary[: size - len(carry)]
-                carry = binary[size - len(carry) - 1 :]
+                carry = binary[size - len(carry) :]
 
                 yield frame
 
