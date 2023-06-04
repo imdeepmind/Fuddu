@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from ._cli import print, progress_bar_inf
 
 
 class TextToVideo:
@@ -17,8 +18,16 @@ class TextToVideo:
         self._path_to_text = path_to_text
         self._path_to_video_output = path_to_video_output
 
+        self._buffering_size = 1024 * 1024 * 100
+        self._encoding_type = "ascii"
+
     def _text_to_ascii(self):
-        with open(self._path_to_text, mode="r", buffering=10000, encoding="ascii") as f:
+        with open(
+            self._path_to_text,
+            mode="r",
+            buffering=self._buffering_size,
+            encoding=self._encoding_type,
+        ) as f:
             for line in f:
                 yield [ord(x) for x in line]
 
@@ -33,7 +42,6 @@ class TextToVideo:
                 carry += binary
                 continue
             else:
-                # TODO: Fix the frame and carry size
                 frame = carry + binary[: size - len(carry)]
                 carry = binary[size - len(carry) :]
 
@@ -41,7 +49,7 @@ class TextToVideo:
 
         yield carry
 
-    def _frame_to_video(self):
+    def convert(self):
         frameSize = (self._width, self._height)
         out = cv2.VideoWriter(
             self._path_to_video_output,
@@ -51,17 +59,14 @@ class TextToVideo:
             0,
         )
 
-        for frame in self._ascii_to_frame():
-            if len(frame) < self._width * self._height:
-                rem = (self._width * self._height) - len(frame)
-                frame += [255] * rem
+        with progress_bar_inf as p:
+            for frame in p.track(self._ascii_to_frame(), description="Converting"):
+                if len(frame) < self._width * self._height:
+                    rem = (self._width * self._height) - len(frame)
+                    frame += [255] * rem
 
-            numbers_py = np.array(frame, dtype=np.uint8).reshape(
-                self._width, self._height
-            )
+                numbers_py = np.array(frame, dtype=np.uint8).reshape(
+                    self._width, self._height
+                )
 
-            out.write(numbers_py)
-
-
-t = TextToVideo(100, 100, 1, "./data/sample.txt", "./data/video.avi")
-t._frame_to_video()
+                out.write(numbers_py)
