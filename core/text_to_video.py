@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from ._cli import print, progress_bar_inf
+from ._cli import progress_bar_inf
 
 
 class TextToVideo:
@@ -65,8 +65,6 @@ class TextToVideo:
                     rem = (self._width * self._height) - len(frame)
                     frame += [255] * rem
 
-                numbers_py = np.array(frame, dtype=np.uint8).reshape(
-                    self._width, self._height
-                )
+                numbers_py = np.array(frame, dtype=np.uint8).reshape(self._width, self._height)
 
                 out.write(numbers_py)
